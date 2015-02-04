@@ -1,0 +1,33 @@
+#!/bin/sh
+
+MUSIC_NOTIFY_ICON='/usr/share/icons/gnome/scalable/devices/audio-headphones-symbolic.svg'
+PLAYER_CMD="$1"
+
+# Cleanup after exit
+trap 'rm -fr "$MUSIC"' EXIT
+
+# Kill process group after interrupt or system shutdown and exit normally
+trap "trap 'exit 0' TERM; kill 0" TERM INT
+
+mkdir -p "$MUSIC/now-playing"
+mkdir -p "$MUSIC/player"
+mkfifo "$MUSIC/player/fifo"
+echo "`which mpv`" > "$MUSIC/player/path"
+
+$PLAYER_CMD | while read line
+do
+  case "$line" in
+    INFO*)
+      eval "`echo $line | sed -r -e 's/^INFO +//' -e 's/\(error\)//g' -e 's#^(\S+) +(.*)#echo "\2" > "$MUSIC/now-playing/\1"#'`"
+      ;;
+    NOTIFY*)
+      notify-send -i "$MUSIC_NOTIFY_ICON" "`cat "$MUSIC/now-playing/title"`" "`cat "$MUSIC/now-playing/album" "$MUSIC/now-playing/artist"`" > /dev/null 2> /dev/null
+      ;;
+    *)
+      echo "$line" >> "$MUSIC/player/log"
+      ;;
+  esac
+done & # Fork so we can trap interrupt signals while `read line` blocks
+
+wait
+exit 0

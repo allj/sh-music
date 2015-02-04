@@ -1,0 +1,225 @@
+#!/bin/sh
+
+# -----------------------------------------------------------------------------
+# FUNCTIONS
+# -----------------------------------------------------------------------------
+
+# Don't create file if no lines are read
+tee() {
+  read line
+
+  if [ $? -eq 1 ]
+  then
+    return
+  elif [ "$1" = '-a' ]
+  then
+    shift
+    echo $line >> $1
+  else
+    echo $line > $1
+  fi
+
+  echo $line
+
+  while read line
+  do
+    echo $line >> $1
+    echo $line
+  done
+}
+
+list() {
+  SEP="||"
+  beet ls -f "\$albumartist$SEP\$year$SEP\$album$SEP\$track$SEP\$title" "$@" | awk "BEGIN { print \"ARTIST${SEP}YEAR${SEP}ALBUM${SEP}TRACK${SEP}TITLE\" } { print \$0 }" | column -t -s "$SEP"
+}
+
+query() {
+  beet ls "$@"
+}
+
+play() {
+  tee "$MUSIC/queue" | awk '{n++; printf("loadfile \"%s\" %d\n", $0, n==1? 0 : 1)}' > "$MUSIC/player/fifo"
+}
+
+queue() {
+  tee -a "$MUSIC/queue" | awk '{ printf("loadfile \"%s\" 1\n", $0) }' > "$MUSIC/player/fifo"
+}
+
+files() {
+  if [ -z "$*" ]
+  then
+    while read line
+    do
+      path="`readlink -e "$line"`"
+      [ $? -eq 0 ] && echo $path
+    done
+    return
+  fi
+
+  args="`find "$@" -type f -exec readlink -e '{}' ';' 2>/dev/null`"
+
+  if [ $? -eq 0 ]
+  then
+    echo "$args"
+  else
+    query -p "$@"
+  fi
+}
+
+help() {
+  echo "Usage: `basename $0` command [ args ... ]" 1>&2
+}
+
+# -----------------------------------------------------------------------------
+# MAIN
+# -----------------------------------------------------------------------------
+
+if [ $# -lt 1 ]
+then
+  help
+  exit 1
+fi
+
+cmd="$1"
+shift
+
+
+if [ ! -f "$MUSIC/player/pid" ]
+then
+  case $cmd in
+    bg)
+      music-player music-mpv &
+      exit 0
+      ;;
+    fg)
+      music-player music-mpv
+      exit 0
+      ;;
+    play|play-select|p|ps)
+      music-player music-mpv &
+      sleep 0.1
+      ;;
+    *)
+      echo "Player not running..." 1>&2
+      exit 1
+      ;;
+  esac
+fi
+
+
+case $cmd in
+  query|db)
+    query "$@"
+    ;;
+  play|p)
+    files "$@" | play
+    ;;
+  queue|q)
+    files "$@" | queue
+    ;;
+  select|s)
+    files "$@" | fzf --sort --multi --reverse
+    ;;
+  play-select|ps)
+    files "$@" | fzf --sort --multi --reverse | play
+    ;;
+  queue-select|qs)
+    files "$@" | fzf --sort --multi --reverse | queue
+    ;;
+  list|ls)
+    list "$@"
+    ;;
+  list-queue|lq)
+    cat "$MUSIC/queue"
+    ;;
+  update|up)
+    beet update "$@"
+    ;;
+  edit|ed)
+    beet modify "$@"
+    ;;
+  now-playing|np)
+    if [ -e "$MUSIC/now-playing" ]
+    then
+      if [ $# -lt 1 ]
+      then
+        for info in "$MUSIC/now-playing"/*
+        do
+          echo "`basename "$info"`: `cat "$info"`"
+        done
+      else
+        for info in $*
+        do
+          cat "$MUSIC/now-playing/$info"
+        done
+      fi
+    fi
+    ;;
+  notify)
+    notify-send "`cat "$MUSIC/now-playing/title"`" "`cat "$MUSIC/now-playing/album" "$MUSIC/now-playing/artist"`"
+    ;;
+  pause)
+    case "$1" in
+      yes)
+        echo "set pause yes" > "$MUSIC/player/fifo"
+        ;;
+      no)
+        echo "set pause no" > "$MUSIC/player/fifo"
+        ;;
+      *)
+        echo "cycle pause" > "$MUSIC/player/fifo"
+        ;;
+    esac
+    ;;
+  next-song|next)
+    echo "playlist_next" > "$MUSIC/player/fifo"
+    ;;
+  previous-song|prev)
+    echo "playlist_prev" > "$MUSIC/player/fifo"
+    ;;
+  seek|sk)
+    echo "seek $1" > "$MUSIC/player/fifo"
+    ;;
+  volume|vol)
+    case "$1" in
+      up)
+        echo "cycle volume up" > "$MUSIC/player/fifo"
+        ;;
+      down)
+        echo "cycle volume down" > "$MUSIC/player/fifo"
+        ;;
+      *)
+        echo "set volume $1" > "$MUSIC/player/fifo"
+        ;;
+    esac
+    ;;
+  exit|quit|x)
+    echo 'quit' > "$MUSIC/player/fifo"
+    ;;
+  term)
+    kill -TERM `cat "$MUSIC/player/pid"`
+    ;;
+  kill)
+    kill -KILL `cat "$MUSIC/player/pid"`
+    ;;
+  pid|$)
+    cat "$MUSIC/player/pid"
+    ;;
+  player)
+    cat "$MUSIC/player/path"
+    ;;
+  dir)
+    echo $MUSIC
+    ;;
+  help|h)
+    help
+    ;;
+  detach|bg|attach|fg)
+    echo "Player already running with PID `cat "$MUSIC/player/pid"`" 1>&2
+    ;;
+  *)
+    echo "error: invalid command '$cmd'" 1>&2
+    ;;
+esac
+
+exit 0

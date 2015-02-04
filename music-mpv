@@ -1,0 +1,12 @@
+#!/bin/sh
+PID="$MUSIC/player/pid"
+FIFO="$MUSIC/player/fifo"
+
+if [ -z "$PID" -o ! -p "$FIFO" ]
+then
+  echo "Usage: `basename $0` PID_FILE FIFO" 1>&2
+  exit 1
+fi
+
+echo $$ > "$PID"
+exec mpv --idle --quiet --no-video --playing-msg='INFO track ${metadata/track}\nINFO title ${metadata/title}\nINFO artist ${metadata/artist}\nINFO album ${metadata/album}\nINFO date ${metadata/date}\nINFO index ${playlist-pos}\nINFO path ${path}\nINFO samplerate ${samplerate}\nINFO bitrate ${audio-bitrate}\nNOTIFY' --input-file="$FIFO" 2> "$MUSIC/player/error_log"
