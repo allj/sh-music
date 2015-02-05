@@ -60,12 +60,12 @@ list() {
   elif [ "$OPT" = -t ]
   then
     S="<%>"
-    query -f "\$albumartist$S\$year$S\$album$S\$track$S\$title$S\$path" "$@" | awk "BEGIN { print \"ARTIST${S}YEAR${S}ALBUM${S}TRACK${S}TITLE${S}PATH\" } { print \$0 }" | column -n -t -s "$S"
+    query -f "\$albumartist$S\$year$S\$album$S\$track$S\$title${S}file://\$path" "$@" | awk "BEGIN { print \"ARTIST${S}YEAR${S}ALBUM${S}TRACK${S}TITLE${S}PATH\" } { print \$0 }" | column -n -t -s "$S"
   fi
 }
 
 parse() {
-  sed 's#^[^/]*##'
+  sed 's#^.*file://##'
 }
 
 play() {
