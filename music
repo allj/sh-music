@@ -59,7 +59,7 @@ list() {
     query -p "$@"
   elif [ "$OPT" = -t ]
   then
-    S="||"
+    S="<%>"
     query -f "\$albumartist$S\$year$S\$album$S\$track$S\$title$S\$path" "$@" | awk "BEGIN { print \"ARTIST${S}YEAR${S}ALBUM${S}TRACK${S}TITLE${S}PATH\" } { print \$0 }" | column -n -t -s "$S"
   fi
 }
@@ -140,6 +140,9 @@ case $cmd in
     ;;
   edit|ed)
     beet modify "$@"
+    ;;
+  remove|rm)
+    beet remove "$@"
     ;;
   now-playing|np)
     if [ -e "$MUSIC/now-playing" ]
