@@ -12,7 +12,7 @@ Control music playback with this shell script.
 ## Usage
 
 Add `music`, `music-player`, and `music-mpv` to your `$PATH` along with this
-`MUSIC="$HOME/.music"` variable to your environment.
+`MUSIC=<SOME_DIR>` variable to your environment.
 
     $ music play [ BEET_LS_ARGS... | FILE... ]
             queue [ BEET_LS_ARGS... | FILE... ]
@@ -26,6 +26,6 @@ Add `music`, `music-player`, and `music-mpv` to your `$PATH` along with this
             prev
             quit
             kill
-            vol ( up | down | 0..100 )
+            volume ( up | down | 0..100 )
 
-if no arguments are given, files are to be passed through stdin.
+If no arguments are given, files are to be passed through stdin.
