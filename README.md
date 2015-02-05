@@ -14,9 +14,9 @@ Control music playback with this shell script.
 Add `music`, `music-player`, and `music-mpv` to your `$PATH` along with this
 `MUSIC=<SOME_DIR>` variable to your environment.
 
-    $ music play [ BEET_LS_ARGS... | FILE... ]
-            queue [ BEET_LS_ARGS... | FILE... ]
-            select [ BEET_LS_ARGS... | FILE... ]
+    $ music play [ BEET_LS_ARGS... | FILES... ]
+            queue [ BEET_LS_ARGS... | FILES... ]
+            select [ BEET_LS_ARGS... | FILES... ]
             list BEET_LS_ARGS...
             now-playing [ TAG_FIELDS... ]
             edit BEET_EDIT_ARGS...

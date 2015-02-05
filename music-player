@@ -11,8 +11,6 @@ trap "trap 'exit 0' TERM; kill 0" TERM INT
 
 mkdir -p "$MUSIC/now-playing"
 mkdir -p "$MUSIC/player"
-mkfifo "$MUSIC/player/fifo"
-echo "`which mpv`" > "$MUSIC/player/path"
 
 $PLAYER_CMD | while read line
 do
