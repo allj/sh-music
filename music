@@ -4,6 +4,10 @@
 # FUNCTIONS
 # -----------------------------------------------------------------------------
 
+help() {
+  echo "Usage: `basename $0` command [ args ... ]" 1>&2
+}
+
 # Don't create file if no lines are read
 tee() {
   read line
@@ -28,24 +32,13 @@ tee() {
   done
 }
 
-list() {
-  SEP="||"
-  beet ls -f "\$albumartist$SEP\$year$SEP\$album$SEP\$track$SEP\$title" "$@" | awk "BEGIN { print \"ARTIST${SEP}YEAR${SEP}ALBUM${SEP}TRACK${SEP}TITLE\" } { print \$0 }" | column -t -s "$SEP"
-}
-
 query() {
   beet ls "$@"
 }
 
-play() {
-  tee "$MUSIC/queue" | awk '{n++; printf("loadfile \"%s\" %d\n", $0, n==1? 0 : 1)}' > "$MUSIC/player/fifo"
-}
+list() {
+  OPT="$1"; shift
 
-queue() {
-  tee -a "$MUSIC/queue" | awk '{ printf("loadfile \"%s\" 1\n", $0) }' > "$MUSIC/player/fifo"
-}
-
-files() {
   if [ -z "$*" ]
   then
     while read line
@@ -61,14 +54,28 @@ files() {
   if [ $? -eq 0 ]
   then
     echo "$args"
-  else
+  elif [ "$OPT" = -p ]
+  then
     query -p "$@"
+  elif [ "$OPT" = -t ]
+  then
+    S="||"
+    query -f "\$albumartist$S\$year$S\$album$S\$track$S\$title$S\$path" "$@" | awk "BEGIN { print \"ARTIST${S}YEAR${S}ALBUM${S}TRACK${S}TITLE${S}PATH\" } { print \$0 }" | column -n -t -s "$S"
   fi
 }
 
-help() {
-  echo "Usage: `basename $0` command [ args ... ]" 1>&2
+parse() {
+  sed 's#^[^/]*##'
 }
+
+play() {
+  tee "$MUSIC/queue" | awk '{n++; printf("loadfile \"%s\" %d\n", $0, n==1? 0 : 1)}' > "$MUSIC/player/fifo"
+}
+
+queue() {
+  tee -a "$MUSIC/queue" | awk '{ printf("loadfile \"%s\" 1\n", $0) }' > "$MUSIC/player/fifo"
+}
+
 
 # -----------------------------------------------------------------------------
 # MAIN
@@ -87,12 +94,8 @@ shift
 if [ ! -f "$MUSIC/player/pid" ]
 then
   case $cmd in
-    bg)
+    start)
       music-player music-mpv &
-      exit 0
-      ;;
-    fg)
-      music-player music-mpv
       exit 0
       ;;
     play|play-select|p|ps)
@@ -112,22 +115,22 @@ case $cmd in
     query "$@"
     ;;
   play|p)
-    files "$@" | play
+    list -p "$@" | play
     ;;
   queue|q)
-    files "$@" | queue
+    list -p "$@" | queue
     ;;
   select|s)
-    files "$@" | fzf --sort --multi --reverse
+    list -t "$@" | fzf --no-sort --multi | parse
     ;;
   play-select|ps)
-    files "$@" | fzf --sort --multi --reverse | play
+    list -t "$@" | fzf --no-sort --multi | parse | play
     ;;
   queue-select|qs)
-    files "$@" | fzf --sort --multi --reverse | queue
+    list -t "$@" | fzf --no-sort --multi | parse | queue
     ;;
   list|ls)
-    list "$@"
+    list -t "$@"
     ;;
   list-queue|lq)
     cat "$MUSIC/queue"
@@ -146,7 +149,7 @@ case $cmd in
         for info in "$MUSIC/now-playing"/*
         do
           echo "`basename "$info"`: `cat "$info"`"
-        done
+        done | column -t -s :
       else
         for info in $*
         do
@@ -214,7 +217,7 @@ case $cmd in
   help|h)
     help
     ;;
-  detach|bg|attach|fg)
+  start)
     echo "Player already running with PID `cat "$MUSIC/player/pid"`" 1>&2
     ;;
   *)
