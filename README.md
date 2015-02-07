@@ -1,4 +1,4 @@
-# music-sh
+# sh-music
 Control music playback with this shell script.
 
 ## Requirements
