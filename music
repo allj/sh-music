@@ -144,6 +144,9 @@ case $cmd in
   remove|rm)
     beet remove "$@"
     ;;
+  rename|move|mv)
+    beet move "$@"
+    ;;
   now-playing|np)
     if [ -d "$MUSIC/now-playing" ]
     then
