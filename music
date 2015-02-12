@@ -133,7 +133,7 @@ case $cmd in
     list -t "$@"
     ;;
   list-queue|lq)
-    cat "$MUSIC/queue"
+    [ -f "$MUSIC/queue" ] && cat "$MUSIC/queue"
     ;;
   update|up)
     beet update "$@"
@@ -145,7 +145,7 @@ case $cmd in
     beet remove "$@"
     ;;
   now-playing|np)
-    if [ -e "$MUSIC/now-playing" ]
+    if [ -d "$MUSIC/now-playing" ]
     then
       if [ $# -lt 1 ]
       then
