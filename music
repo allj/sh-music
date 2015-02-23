@@ -32,10 +32,6 @@ tee() {
   done
 }
 
-query() {
-  beet ls "$@"
-}
-
 list() {
   OPT="$1"; shift
 
@@ -49,23 +45,36 @@ list() {
     return
   fi
 
-  args="`find "$@" -type f -exec readlink -e '{}' ';' 2>/dev/null`"
+  args="$(find "$@" -type f -exec readlink -e '{}' ';' 2>/dev/null)"
 
   if [ $? -eq 0 ]
   then
     echo "$args"
-  elif [ "$OPT" = -p ]
-  then
-    query -p "$@"
-  elif [ "$OPT" = -t ]
-  then
-    S="<%>"
-    query -f "\$albumartist$S\$year$S\$album$S\$track$S\$title${S}file://\$path" "$@" | awk "BEGIN { print \"ARTIST${S}YEAR${S}ALBUM${S}TRACK${S}TITLE${S}PATH\" } { print \$0 }" | column -n -t -s "$S"
+  else
+    case "$OPT" in
+      -p)
+        beet ls -p "$@"
+        ;;
+      -f)
+        beet ls -f "$@"
+        ;;
+      -l)
+        beet ls "$@"
+        ;;
+      -t)
+        S="<%>"
+        beet ls -f "\$albumartist$S\$year$S\$album$S\$track$S\$title${S}file://\$path" "$@" | awk "BEGIN { print \"ARTIST${S}YEAR${S}ALBUM${S}TRACK${S}TITLE${S}PATH\" } { print \$0 }" | column -n -t -s "$S"
+        ;;
+    esac
   fi
 }
 
+Select() {
+  sed -r 's#(PATH|file://)#\x00\1#' | fzf --no-sort --multi --nth=1 --with-nth=1,2,3 --delimiter="\0"
+}
+
 parse() {
-  sed 's#^.*file://##'
+  sed -e 's#^.*file://##' -e '/PATH/d'
 }
 
 play() {
@@ -112,7 +121,7 @@ fi
 
 case $cmd in
   query|db)
-    query "$@"
+    list -l "$@"
     ;;
   play|p)
     list -p "$@" | play
@@ -121,13 +130,13 @@ case $cmd in
     list -p "$@" | queue
     ;;
   select|s)
-    list -t "$@" | fzf --no-sort --multi | parse
+    list -t "$@" | Select | parse
     ;;
   play-select|ps)
-    list -t "$@" | fzf --no-sort --multi | parse | play
+    list -t "$@" | Select | parse | play
     ;;
   queue-select|qs)
-    list -t "$@" | fzf --no-sort --multi | parse | queue
+    list -t "$@" | Select | parse | queue
     ;;
   list|ls)
     list -t "$@"
@@ -155,7 +164,7 @@ case $cmd in
         for info in "$MUSIC/now-playing"/*
         do
           echo "`basename "$info"`: `cat "$info"`"
-        done | column -t -s :
+        done | column -n -t -s :
       else
         for info in $*
         do
