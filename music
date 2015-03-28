@@ -49,7 +49,7 @@ list() {
 
   if [ $? -eq 0 ]
   then
-    echo "$args"
+    echo "$args" | sort
   else
     case "$OPT" in
       -p)
@@ -70,7 +70,7 @@ list() {
 }
 
 Select() {
-  sed -r 's#(PATH|file://)#\x00\1#' | fzf --no-sort --multi --nth=1 --with-nth=1,2,3 --delimiter="\0"
+  sed -r 's#(PATH|file://)#\x00\1#' | fzf -e --no-sort --multi --nth=1 --with-nth=1,2,3 --delimiter="\0"
 }
 
 parse() {

@@ -14,12 +14,13 @@ Control music playback with this shell script.
 Add `music`, `music-player`, and `music-mpv` to your `$PATH` along with this
 `MUSIC=<SOME_DIR>` variable to your environment.
 
-    $ music play [ BEET_LS_ARGS... | FILES... ]
-            queue [ BEET_LS_ARGS... | FILES... ]
-            select [ BEET_LS_ARGS... | FILES... ]
-            list BEET_LS_ARGS...
+    $ music play [ QUERY | FILES... ]
+            queue [ QUERY | FILES... ]
+            select [ QUERY | FILES... ]
+            list QUERY
             now-playing [ TAG_FIELDS... ]
-            edit BEET_EDIT_ARGS...
+            edit QUERY
+            remove QUERY
             pause ( yes | no | 0..100 )
             seek [-]SECONDS
             next
