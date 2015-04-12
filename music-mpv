@@ -1,8 +1,0 @@
-#!/bin/sh
-
-FIFO="$MUSIC/player/fifo"
-
-mkfifo "$FIFO"
-echo $$ > "$MUSIC/player/pid"
-echo "`which mpv`" > "$MUSIC/player/path"
-exec mpv --idle --quiet --no-video --playing-msg='INFO track ${metadata/track}\nINFO title ${metadata/title}\nINFO artist ${metadata/artist}\nINFO album ${metadata/album}\nINFO date ${metadata/date}\nINFO qindex ${playlist-pos}\nINFO path ${path}\nINFO samplerate ${samplerate}\nINFO bitrate ${audio-bitrate}\nNOTIFY' --input-file="$FIFO" 2> "$MUSIC/player/error_log"
