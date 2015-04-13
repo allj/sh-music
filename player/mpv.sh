@@ -1,3 +1,6 @@
+MUSIC_TMP_DIR="$(cat "$MUSIC/config/tmp" 2>/dev/null)"
+MUSIC_NOTIFY_ICON="$(cat "$MUSIC/config/notify-icon")"
+
 # Don't create file if no lines are read
 tee() {
   read line

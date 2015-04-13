@@ -1,6 +1,5 @@
 #!/bin/sh
 
-echo $$
 # -----------------------------------------------------------------------------
 # FUNCTIONS
 # -----------------------------------------------------------------------------
@@ -9,9 +8,14 @@ help() {
   echo "Usage: $(basename $0) command [ args ... ]" >&2
 }
 
-. $MUSIC_CONFIG_DIR/config.sh
-. $MUSIC_CONFIG_DIR/library/${MUSIC_LIBRARY}.sh
-. $MUSIC_CONFIG_DIR/player/${MUSIC_PLAYER}.sh
+if [ -z "$MUSIC" ]
+then
+  echo 'error MUSIC environment variable not set' >&2
+  exit 1
+fi
+
+. $MUSIC/library/$(cat $MUSIC/config/library).sh
+. $MUSIC/player/$(cat $MUSIC/config/player).sh
 
 # -----------------------------------------------------------------------------
 # MAIN
@@ -37,6 +41,8 @@ then
     play|play-select|p|ps)
       playerRun &
       sleep 0.1
+      ;;
+    config|c)
       ;;
     *)
       echo "Player not running..." 1>&2
@@ -113,8 +119,29 @@ case $cmd in
   player)
     playerPath
     ;;
-  dir)
-    echo $MUSIC
+  config|c)
+    if [ $# -lt 1 ]
+    then
+      for var in $MUSIC/config/*
+      do
+        echo $(basename "$var") = $(cat "$var" 2>/dev/null)
+      done | column -t -s =
+
+      exit $?
+    fi
+
+    var="$1"
+    shift
+
+    if [ $# -lt 1 ]
+    then
+      cat "$MUSIC/config/$var" 2>/dev/null
+      exit $?
+    else
+      echo "$1" > "$MUSIC/config/$var"
+      exit $?
+    fi
+
     ;;
   help|h)
     help

@@ -2,8 +2,8 @@ SPOTIFY_DEST="org.mpris.MediaPlayer2.spotify"
 SPOTIFY_PATH="/org/mpris/MediaPlayer2"
 SPOTIFY_MEMB="org.mpris.MediaPlayer2"
 
-playerStart() {
-  echo
+playerRun() {
+  spotify > /dev/null 2>&1
 }
 
 playerPlay() {
