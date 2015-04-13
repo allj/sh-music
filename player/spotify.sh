@@ -34,6 +34,7 @@ playerSeek() {
   echo 'error: not implemented for spotify' >&2
 }
 
+# Copied from here: https://gist.github.com/wandernauta/6800547
 playerNowPlaying() {
   dbus-send                                                                   \
   --print-reply                                  `# We need the reply.`       \
