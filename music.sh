@@ -1,35 +1,63 @@
 #!/bin/sh
 
-# -----------------------------------------------------------------------------
-# FUNCTIONS
-# -----------------------------------------------------------------------------
-
-help() {
-  echo "Usage: $(basename $0) command [ args ... ]" >&2
-}
-
 if [ -z "$MUSIC" ]
 then
   echo 'error MUSIC environment variable not set' >&2
   exit 1
 fi
 
-. $MUSIC/library/$(cat $MUSIC/config/library).sh
-. $MUSIC/player/$(cat $MUSIC/config/player).sh
-
-# -----------------------------------------------------------------------------
-# MAIN
-# -----------------------------------------------------------------------------
-
-if [ $# -lt 1 ]
+if [ $# -gt 0 ]
 then
-  help
+  cmd="$1"
+  shift
+fi
+
+case "$cmd" in
+  config|c)
+    if [ $# -lt 1 ]
+    then
+      for var in $MUSIC/config/*
+      do
+        echo $(basename "$var") = $(cat "$var" 2>/dev/null)
+      done | column -t -s =
+
+      exit $?
+    fi
+
+    var="$1"
+    shift
+
+    if [ $# -lt 1 ]
+    then
+      cat "$MUSIC/config/$var" 2>/dev/null
+      exit $?
+    else
+      echo "$1" > "$MUSIC/config/$var"
+      exit $?
+    fi
+
+    exit 0
+    ;;
+esac
+
+LIBRARY="$MUSIC/library/$(cat "$MUSIC/config/library" 2>/dev/null).sh"
+
+if [ ! -f "$LIBRARY" ]
+then
+  echo 'invalid library' >&2
   exit 1
 fi
 
-cmd="$1"
-shift
+PLAYER="$MUSIC/player/$(cat "$MUSIC/config/player" 2>/dev/null).sh"
 
+if [ ! -f "$PLAYER" ]
+then
+  echo 'invalid player' >&2
+  exit 1
+fi
+
+. "$LIBRARY"
+. "$PLAYER"
 
 if [ -z "$(playerPid)" ]
 then
@@ -42,15 +70,12 @@ then
       playerRun &
       sleep 0.1
       ;;
-    config|c)
-      ;;
     *)
       echo "Player not running..." 1>&2
       exit 1
       ;;
   esac
 fi
-
 
 case $cmd in
   play|p)
@@ -119,38 +144,13 @@ case $cmd in
   player)
     playerPath
     ;;
-  config|c)
-    if [ $# -lt 1 ]
-    then
-      for var in $MUSIC/config/*
-      do
-        echo $(basename "$var") = $(cat "$var" 2>/dev/null)
-      done | column -t -s =
-
-      exit $?
-    fi
-
-    var="$1"
-    shift
-
-    if [ $# -lt 1 ]
-    then
-      cat "$MUSIC/config/$var" 2>/dev/null
-      exit $?
-    else
-      echo "$1" > "$MUSIC/config/$var"
-      exit $?
-    fi
-
-    ;;
-  help|h)
-    help
-    ;;
   start)
     echo "Player already running with PID $(playerPid)" 1>&2
+    exit 1
     ;;
   *)
-    echo "error: invalid command '$cmd'" 1>&2
+    echo "Usage: $(basename $0) command [ args ... ]" >&2
+    exit 1
     ;;
 esac
 

@@ -118,7 +118,7 @@ playerNowPlaying() {
     else
       for info in $*
       do
-        cat "$MUSIC_TMP_DIR/now-playing/$info"
+        cat "$MUSIC_TMP_DIR/now-playing/$info" 2>/dev/null
       done
     fi
   fi

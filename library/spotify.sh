@@ -19,3 +19,19 @@ libraryList() {
 libraryListFormatted() {
   libraryList "$@"
 }
+
+libraryUpdate() {
+  echo 'error: not implemented for spotify' >&2
+}
+
+libraryEdit() {
+  echo 'error: not implemented for spotify' >&2
+}
+
+libraryRemove() {
+  echo 'error: not implemented for spotify' >&2
+}
+
+libraryRename() {
+  echo 'error: not implemented for spotify' >&2
+}
