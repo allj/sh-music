@@ -48,7 +48,7 @@ playerRun() {
     --quiet \
     --no-video \
     --playing-msg='INFO track ${metadata/track}\nINFO title ${metadata/title}\nINFO artist ${metadata/artist}\nINFO album ${metadata/album}\nINFO date ${metadata/date}\nINFO qindex ${playlist-pos}\nINFO path ${path}\nINFO samplerate ${samplerate}\nINFO bitrate ${audio-bitrate}\nNOTIFY' \
-    --input-file="$FIFO" 2> "$MUSIC_TMP_DIR/player/error_log" | \
+    --input-file="$FIFO" 2> "$MUSIC_TMP_DIR/player/log" | \
   while read line
   do
     case "$line" in
@@ -69,11 +69,11 @@ playerRun() {
 }
 
 playerPlay() {
-  tee "$MUSIC_TMP_DIR/queue" | awk '{n++; printf("loadfile \"%s\" %d\n", $0, n==1? 0 : 1)}' > "$MUSIC_TMP_DIR/player/fifo"
+  tee "$MUSIC_TMP_DIR/queue" | awk '{n++; printf("loadfile \"%s\" %s\n", $0, n==1? replace : append)}' > "$MUSIC_TMP_DIR/player/fifo"
 }
 
 playerQueue() {
-  tee -a "$MUSIC_TMP_DIR/queue" | awk '{ printf("loadfile \"%s\" 1\n", $0) }' > "$MUSIC_TMP_DIR/player/fifo"
+  tee -a "$MUSIC_TMP_DIR/queue" | awk '{ printf("loadfile \"%s\" append\n", $0) }' > "$MUSIC_TMP_DIR/player/fifo"
 }
 
 playerTogglePause() {
@@ -118,7 +118,7 @@ playerNowPlaying() {
     else
       for info in $*
       do
-        cat "$MUSIC_TMP_DIR/now-playing/$info" 2>/dev/null
+        cat "$MUSIC_TMP_DIR/now-playing/$info"
       done
     fi
   fi

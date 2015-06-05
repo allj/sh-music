@@ -31,7 +31,7 @@ libraryListFormatted() {
 }
 
 librarySelect() {
-  sed -r 's#(PATH|file://)#\x00\1#' | fzf -e --no-sort --multi --nth=1 --with-nth=1,2,3 --delimiter="\0" | sed -e 's#^.*file://##' -e '/PATH/d'
+  sed -r 's#(PATH|file://)#\x00\1#' | fzf --reverse -e --no-sort --multi --nth=1 --with-nth=1,2,3 --delimiter="\0" | sed -e 's#^.*file://##' -e '/PATH/d'
 }
 
 libraryUpdate() {
