@@ -129,6 +129,9 @@ case $cmd in
   volume|vol)
     playerVolume "$@"
     ;;
+  stop|st)
+    playerStop
+    ;;
   exit|quit|x)
     playerQuit
     ;;

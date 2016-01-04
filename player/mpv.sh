@@ -68,12 +68,14 @@ playerRun() {
   exit 0
 }
 
-playerPlay() {
-  tee "$MUSIC_TMP_DIR/queue" | awk '{n++; printf("loadfile \"%s\" %s\n", $0, n==1? replace : append)}' > "$MUSIC_TMP_DIR/player/fifo"
-}
 
 playerQueue() {
-  tee -a "$MUSIC_TMP_DIR/queue" | awk '{ printf("loadfile \"%s\" append\n", $0) }' > "$MUSIC_TMP_DIR/player/fifo"
+  tee -a "$MUSIC_TMP_DIR/queue" | awk '{ printf("loadfile \"%s\" append-play\n", $0) }' > "$MUSIC_TMP_DIR/player/fifo"
+}
+
+playerPlay() {
+  echo 'stop' > "$MUSIC_TMP_DIR/player/fifo"
+  tee "$MUSIC_TMP_DIR/queue" | awk '{ printf("loadfile \"%s\" append-play\n", $0) }' > "$MUSIC_TMP_DIR/player/fifo"
 }
 
 playerTogglePause() {
@@ -91,11 +93,11 @@ playerTogglePause() {
 }
 
 playerNext() {
-  echo "playlist_next" > "$MUSIC_TMP_DIR/player/fifo"
+  echo "playlist-next force" > "$MUSIC_TMP_DIR/player/fifo"
 }
 
 playerPrevious() {
-  echo "playlist_prev" > "$MUSIC_TMP_DIR/player/fifo"
+  echo "playlist-prev force" > "$MUSIC_TMP_DIR/player/fifo"
 }
 
 playerStop() {
@@ -140,6 +142,10 @@ playerVolume() {
       echo "set volume $1" > "$MUSIC_TMP_DIR/player/fifo"
       ;;
   esac
+}
+
+playerStop() {
+  echo 'stop' > "$MUSIC_TMP_DIR/player/fifo"
 }
 
 playerQuit() {
